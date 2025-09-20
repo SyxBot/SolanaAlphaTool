@@ -152,8 +152,12 @@ async def start_webhook_bot():
             for ev in finals:
                 send_to_eliza(ev, rules)
                 await asyncio.sleep(0.05)  # Add a micro-delay per send
+            print(f"[ELIZA] forwarded {len(finals)} events")
 
+        # Dispatch batch to webhook
         await webhook_main()
+        print(f"[WEBHOOK] dispatched batch of {len(finals)}")
+
         await asyncio.sleep(1)  # Add a backoff after processing each batch
 
         # Add a minimal backoff to prevent tight loop crashes
