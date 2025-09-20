@@ -12,7 +12,7 @@ MEMORY_API_URL=https://your-memory-api.replit.app
 MEMORY_API_KEY=your_memory_api_key_here
 
 # Telegram Bot Configuration  
-TELEGRAM_BOT_TOKEN=7676065576:AAG11gix3H1BZy0DVlYHinMG3mEZFeH7GMg
+TELEGRAM_BOT_TOKEN=
 TELEGRAM_CHAT_ID=your_telegram_chat_id_here
 
 # API Keys
