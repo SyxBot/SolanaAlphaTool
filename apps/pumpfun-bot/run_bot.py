@@ -13,16 +13,27 @@ standard ``.env`` file when run.
 
 import asyncio
 import sys
+import os
+from dotenv import load_dotenv; load_dotenv()
+from filters.basic import filter_event
 
 async def main():
     """Run the webhook alert bot directly."""
     try:
         from webhook_alert_bot import main as webhook_main
+
+        # Example: Apply filters before forwarding events
+        events = []  # Replace with actual events
+        cfg = {key: os.getenv(key) for key in os.environ.keys() if key.startswith("PF_")}
+        for ev in events:
+            accepted, reason = filter_event(ev, cfg)
+            if not accepted:
+                print(f"REJECT {ev.get('symbol')} {ev.get('mint')} — {reason}")
+                continue
+
         await webhook_main()
     except ImportError:
-        print("❌ Cannot import webhook_alert_bot.py")
-        print("   Ensure all files are in the project directory")
-        sys.exit(1)
+        print("⚠️ webhook_alert_bot not available; proceeding without webhook features.")
     except Exception as e:
         print(f"❌ Error running bot: {e}")
         sys.exit(1)

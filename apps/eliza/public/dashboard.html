@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eliza Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #f4f4f4; }
+    .controls { margin-bottom: 10px; }
+    .status { margin-bottom: 10px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Eliza Dashboard</h1>
+  <div class="status" id="status">Connecting...</div>
+  <div class="controls">
+    <button id="toggle">Pause</button>
+    <button id="seed">Seed Test Event</button>
+    <input type="text" id="filter" placeholder="Filter by symbol, name, or mint">
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Time</th>
+        <th>Mint</th>
+        <th>Symbol</th>
+        <th>Name</th>
+        <th>Creator</th>
+        <th>Transaction</th>
+      </tr>
+    </thead>
+    <tbody id="events"></tbody>
+  </table>
+
+  <script>
+    let lastTs = 0;
+    let paused = false;
+    const events = [];
+
+    const statusEl = document.getElementById('status');
+    const toggleBtn = document.getElementById('toggle');
+    const seedBtn = document.getElementById('seed');
+    const filterInput = document.getElementById('filter');
+
+    toggleBtn.addEventListener('click', () => {
+      paused = !paused;
+      toggleBtn.textContent = paused ? 'Resume' : 'Pause';
+    });
+
+    seedBtn.addEventListener('click', () => {
+      fetch('/api/seed', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+          if (data.ok) {
+            statusEl.textContent = 'Seed event added!';
+            setTimeout(() => statusEl.textContent = '', 2000);
+          }
+        })
+        .catch(err => {
+          statusEl.textContent = `Error: ${err.message}`;
+        });
+    });
+
+    filterInput.addEventListener('input', renderEvents);
+
+    function fetchEvents() {
+      if (paused) return;
+
+      fetch(`/api/events?since=${lastTs}`)
+        .then(response => response.json())
+        .then(data => {
+          lastTs = data.now;
+          events.push(...data.events);
+          if (events.length > 500) events.splice(0, events.length - 500);
+          renderEvents();
+          statusEl.textContent = events.length ? `Connected (${events.length} events)` : 'Connected (No events yet)';
+        })
+        .catch(err => {
+          statusEl.textContent = `Error: ${err.message}`;
+        });
+    }
+
+    function renderEvents() {
+      const filter = filterInput.value.toLowerCase();
+      const tbody = document.getElementById('events');
+      tbody.innerHTML = '';
+
+      events
+        .filter(event => {
+          return (
+            event.mint.toLowerCase().includes(filter) ||
+            event.symbol.toLowerCase().includes(filter) ||
+            event.name.toLowerCase().includes(filter)
+          );
+        })
+        .forEach(event => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${new Date(event.ts).toLocaleString()}</td>
+            <td>${event.mint}</td>
+            <td>${event.symbol}</td>
+            <td>${event.name}</td>
+            <td>${event.creator}</td>
+            <td>${event.tx}</td>
+          `;
+          tbody.appendChild(row);
+        });
+    }
+
+    setInterval(fetchEvents, 2000);
+  </script>
+</body>
+</html>

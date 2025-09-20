@@ -1,0 +1,8 @@
+python-dotenv
+websockets
+aiohttp
+requests
+base58
+solders
+solana
+uvloop; platform_system != "Windows"

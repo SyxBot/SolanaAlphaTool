@@ -3,3 +3,5 @@ node_modules
 apps/*/.env
 dist
 build
+*.log
+apps/*/logs/

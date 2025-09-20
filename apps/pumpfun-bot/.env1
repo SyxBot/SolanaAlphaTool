@@ -1,0 +1,40 @@
+# === General Configuration ===
+NODE_ENV=development
+BASE="https://glowing-potato-97ww9ggv6467fpvvg-3001.app.github.dev"
+
+
+# === Solana RPC / Helius ===
+SOLANA_RPC_URL=
+SOLANA_RPC_URL_FALLBACK=https://solana-api.syndica.network https://solana--gcp.rpcpool.com/
+HELIUS_API_KEY=e1b7ade2-1855-4b32-8b9c-499398f371ff
+
+# === Wallet Keys ===
+## WALLET_PRIVATE_KEY=your_wallet_private_key_here
+
+# === Telegram Integration ===
+WEBHOOK_TYPE=telegram
+TELEGRAM_BOT_TOKEN=7676065576:AAG11gix3H1BZy0DVlYHinMG3mEZFeH7GMg
+TELEGRAM_CHAT_ID=7935283169
+
+# === Webhooks ===
+WEBHOOK_URL=
+WEBHOOK_SECRET=your_webhook_secret_here
+
+ELIZA_INGEST_URL=https://glowing-potato-97ww9ggv6467fpvvg-3001.app.github.dev/ingest
+
+
+# === Pumpfun Bot Filter Config ===
+PF_PUMPFUN_ONLY=true          # Only catch Pump.fun launches
+PF_MAX_AGE_MIN=3              # Fresh only (0–3 min old)
+PF_MIN_LIQ_USD=2000           # At least $2k liquidity
+PF_MIN_HOLDERS=30             # Avoid rugs with <30 holders
+PF_MIN_VOLUME_USD_H1=5000     # At least $5k traded in 1h
+PF_COOLDOWN_SEC=60            # 1 min between snipes
+
+# Optional blocklists (add wallets/mints as you encounter bad actors)
+PF_BLOCKLIST_CREATORS=
+PF_BLOCKLIST_MINTS=
+
+# === Legacy (if still used) ===
+REPLIT_DB_URL=
+REPLIT_API_KEY=
