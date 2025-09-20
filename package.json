@@ -1,0 +1,11 @@
+{
+  "name": "solana-alpha-tool",
+  "private": true,
+  "workspaces": ["apps/*"],
+  "scripts": {
+    "dev:pumpfun": "npm --prefix apps/pumpfun-bot run dev || npm --prefix apps/pumpfun-bot start",
+    "dev:eliza":   "npm --prefix apps/eliza run dev || npm --prefix apps/eliza start",
+    "dev:both":    "npm run dev:pumpfun & npm run dev:eliza",
+    "install:all": "npm --workspaces=false i && npm --prefix apps/pumpfun-bot i || true && npm --prefix apps/eliza i || true"
+  }
+}

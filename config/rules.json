@@ -1,0 +1,14 @@
+{
+  "enable_rpc_prefilter": true,
+  "enable_security_gate": true,
+  "max_age_minutes": 3,
+  "allowed_decimals": [6,8,9],
+  "name_blacklist": [],
+  "cooldown_minutes": 0,
+  "enable_whaleA": true,
+
+  "ttl": { "pairs_seconds": 90, "labels_seconds": 900 },
+  "gates": { "pre_score_gate": 60, "alert_min_score": 75, "degrade_raise": 5, "sample_top_k": 5 },
+  "budget": { "dexscreener_per_min": 30, "helius_per_min": 60, "low_watermark": 0.2 },
+  "breaker": { "error_rate_threshold": 0.3, "window_seconds": 120, "pause_seconds": 120 }
+}

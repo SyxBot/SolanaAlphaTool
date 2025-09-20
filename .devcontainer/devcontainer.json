@@ -1,0 +1,19 @@
+{
+  "name": "syx-ai",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/common-utils:2": {}
+  },
+  "postCreateCommand": "npm -v && node -v && npm i --workspaces=false && npm --prefix apps/pumpfun-bot i || true && npm --prefix apps/eliza i || true",
+  "forwardPorts": [3000, 3001, 5173],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "streetsidesoftware.code-spell-checker"
+      ]
+    }
+  }
+}
