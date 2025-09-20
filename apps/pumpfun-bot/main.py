@@ -148,11 +148,17 @@ async def start_webhook_bot():
         finals = finals[:MAX_BATCH_SIZE]
 
         # Forward finals to the next stage (e.g., bridge/alerts)
-        if os.getenv("ELIZA_INGEST_URL") or rules.get("ELIZA_INGEST_URL"):
+        eliza_url = os.getenv("ELIZA_INGEST_URL") or rules.get("ELIZA_INGEST_URL")
+
+        if not eliza_url:
+            print("[ELIZA] disabled: missing ELIZA_INGEST_URL")
+        else:
             for ev in finals:
                 send_to_eliza(ev, rules)
                 await asyncio.sleep(0.05)  # Add a micro-delay per send
             print(f"[ELIZA] forwarded {len(finals)} events")
+
+        print(f"[WEBHOOK] dispatching batch of {len(finals)}")
 
         # Dispatch batch to webhook
         await webhook_main()
