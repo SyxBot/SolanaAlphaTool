@@ -9,54 +9,62 @@ def _is_ascii_2_16(s: str) -> bool:
     if not (2 <= len(s) <= 16): return False
     return all(ch in ASCII and ch != "\x0b" and ch != "\x0c" for ch in s)
 
-# returns: (survivors, dropped_reasons)
-def security_gate(events: List[dict], rules: dict) -> Tuple[List[dict], Union[list,dict]]:
-    blacklist = set(rules.get("name_blacklist", []))
-    cooldown_min = int(rules.get("cooldown_minutes", 0))
-    # simple in-proc cooldown map; callers typically run long-lived process
-    # NOTE: replace with external store if you need cross-process sharing
-    if not hasattr(security_gate, "_cooldown"):
-        security_gate._cooldown = {}  # mint -> expiry_ts
+# Option 1: Refactor security_gate into a class
 
-    survivors, dropped = [], []
+class SecurityGate:
+    def __init__(self):
+        # Initialize cooldown map for tracking
+        self._cooldown = {}
 
-    for ev in events:
-        mint = ev.get("mint")
-        meta = ev.get("v1_1", {}).get("meta", {})
-        mint_auth = ev.get("mintAuthority") or meta.get("mintAuthority")
-        freeze_auth = ev.get("freezeAuthority") or meta.get("freezeAuthority")
+    def process(self, events: List[dict], rules: dict) -> Tuple[List[dict], Union[list, dict]]:
+        blacklist = set(rules.get("name_blacklist", []))
+        cooldown_min = int(rules.get("cooldown_minutes", 0))
 
-        name = ev.get("name") or ev.get("symbol") or meta.get("name") or meta.get("symbol")
+        survivors, dropped = [], []
 
-        reasons = []
+        for ev in events:
+            mint = ev.get("mint")
+            meta = ev.get("v1_1", {}).get("meta", {})
+            mint_auth = ev.get("mintAuthority") or meta.get("mintAuthority")
+            freeze_auth = ev.get("freezeAuthority") or meta.get("freezeAuthority")
 
-        # Authority sanity: must be burned/null (represented here as None/falsey)
-        if mint_auth or freeze_auth:
-            reasons.append("authority_present")
+            name = ev.get("name") or ev.get("symbol") or meta.get("name") or meta.get("symbol")
 
-        # Hygiene
-        if name and (not _is_ascii_2_16(name) or any(term.lower() in name.lower() for term in blacklist)):
-            reasons.append("name_invalid")
+            reasons = []
 
-        # Simple numeric sanity for a couple of known numeric fields
-        for k in ("price", "liq_usd", "vol_5m_usd"):
-            v = ev.get(k)
-            if v is not None and (not isinstance(v, (int,float)) or not math.isfinite(float(v))):
-                reasons.append(f"bad_{k}")
+            # Authority sanity: must be burned/null (represented here as None/falsey)
+            if mint_auth or freeze_auth:
+                reasons.append("authority_present")
 
-        # Cooldown
-        if cooldown_min > 0 and mint:
-            from time import time as _now
-            now = int(_now())
-            exp = security_gate._cooldown.get(mint, 0)
-            if exp and exp > now:
-                reasons.append("cooldown")
+            # Hygiene
+            if name and (not _is_ascii_2_16(name) or any(term.lower() in name.lower() for term in blacklist)):
+                reasons.append("name_invalid")
+
+            # Simple numeric sanity for a couple of known numeric fields
+            for k in ("price", "liq_usd", "vol_5m_usd"):
+                v = ev.get(k)
+                if v is not None and (not isinstance(v, (int, float)) or not math.isfinite(float(v))):
+                    reasons.append(f"bad_{k}")
+
+            # Cooldown
+            if cooldown_min > 0 and mint:
+                from time import time as _now
+                now = int(_now())
+                exp = self._cooldown.get(mint, 0)
+                if exp and exp > now:
+                    reasons.append("cooldown")
+                else:
+                    self._cooldown[mint] = now + cooldown_min * 60
+
+            if reasons:
+                dropped.append({"mint": mint, "reasons": reasons})
             else:
-                security_gate._cooldown[mint] = now + cooldown_min * 60
+                survivors.append(ev)
 
-        if reasons:
-            dropped.append({"mint": mint, "reasons": reasons})
-        else:
-            survivors.append(ev)
+        return survivors, dropped
 
-    return survivors, dropped
+    def __call__(self, events: List[dict], rules: dict) -> Tuple[List[dict], Union[list, dict]]:
+        return self.process(events, rules)
+
+# Update usage
+security_gate = SecurityGate()

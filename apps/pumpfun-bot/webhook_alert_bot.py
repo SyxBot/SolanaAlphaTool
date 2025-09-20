@@ -192,11 +192,11 @@ class WebhookAlertBot:
             "embeds": [embed]
         }
         
-        if self.config.discord_username:
-            payload["username"] = self.config.discord_username
-            
-        if self.config.discord_avatar_url:
-            payload["avatar_url"] = self.config.discord_avatar_url
+        # TODO: re-enable Discord webhook here
+        # if self.config.discord_username:
+        #     payload["username"] = self.config.discord_username
+        # if self.config.discord_avatar_url:
+        #     payload["avatar_url"] = self.config.discord_avatar_url
 
         return payload
 
@@ -235,9 +235,10 @@ class WebhookAlertBot:
         if self.config.webhook_type == "telegram":
             payload = self._format_telegram_message(token_info)
             headers = {"Content-Type": "application/json"}
-        elif self.config.webhook_type == "discord":
-            payload = self._format_discord_message(token_info)
-            headers = {"Content-Type": "application/json"}
+        # TODO: re-enable Discord webhook here
+        # elif self.config.webhook_type == "discord":
+        #     payload = self._format_discord_message(token_info)
+        #     headers = {"Content-Type": "application/json"}
         else:
             payload = self._format_generic_message(token_info)
             headers = {"Content-Type": "application/json"}
@@ -345,15 +346,14 @@ async def main():
             
         config = create_telegram_config(bot_token, chat_id)
         
-    elif webhook_type == "discord":
-        webhook_url = os.getenv("DISCORD_WEBHOOK_URL")
-        
-        if not webhook_url:
-            print("❌ For Discord alerts, set DISCORD_WEBHOOK_URL")
-            print("Create webhook in Discord: Server Settings > Integrations > Webhooks")
-            return
-            
-        config = create_discord_config(webhook_url)
+    # TODO: re-enable Discord webhook here
+    # elif webhook_type == "discord":
+    #     webhook_url = os.getenv("DISCORD_WEBHOOK_URL")
+    #     if not webhook_url:
+    #         print("❌ For Discord alerts, set DISCORD_WEBHOOK_URL")
+    #         print("Create webhook in Discord: Server Settings > Integrations > Webhooks")
+    #         return
+    #     config = create_discord_config(webhook_url)
         
     else:
         webhook_url = os.getenv("WEBHOOK_URL")
@@ -386,6 +386,14 @@ async def main():
         print(f"   Webhook failures: {stats['webhook_failures']}")
         print(f"   Success rate: {stats['success_rate']:.1f}%")
         print(f"   Runtime: {stats['runtime_seconds']} seconds")
+
+
+async def webhook_main(finals):
+    """Consume a batch of processed events and fan out to the configured webhook(s)."""
+    # placeholder: replace with real telegram/discord/generic send
+    logging.info("webhook_main: sending %d events", len(finals) if finals else 0)
+    # no blocking work here; keep it async-friendly
+    await asyncio.sleep(0)
 
 
 if __name__ == "__main__":

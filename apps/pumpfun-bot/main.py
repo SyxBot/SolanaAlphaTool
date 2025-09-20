@@ -93,8 +93,12 @@ def check_environment():
 
 
 # Load rules from config/rules.json
-with open("config/rules.json") as f:
-    rules = json.load(f)
+try:
+    with open("config/rules.json") as f:
+        rules = json.load(f)
+except Exception as e:
+    print(f"⚠️  Could not load config/rules.json: {e}")
+    rules = {}
 
 async def process_events(batch):
     """Process a batch of events through rpc_prefilter and security_gate."""
@@ -129,6 +133,7 @@ async def process_events(batch):
 
 async def start_webhook_bot():
     """Start the webhook alert bot."""
+    MAX_BATCH_SIZE = 50
     try:
         from webhook_alert_bot import main as webhook_main
         from bridge.to_eliza import send_to_eliza
@@ -139,11 +144,20 @@ async def start_webhook_bot():
         # Process the batch through the pipeline
         finals = await process_events(batch)
 
+        # Cap the batch size to prevent overloading
+        finals = finals[:MAX_BATCH_SIZE]
+
         # Forward finals to the next stage (e.g., bridge/alerts)
         if os.getenv("ELIZA_INGEST_URL") or rules.get("ELIZA_INGEST_URL"):
             for ev in finals:
                 send_to_eliza(ev, rules)
-        await webhook_main(finals)
+                await asyncio.sleep(0.05)  # Add a micro-delay per send
+
+        await webhook_main()
+        await asyncio.sleep(1)  # Add a backoff after processing each batch
+
+        # Add a minimal backoff to prevent tight loop crashes
+        await asyncio.sleep(0.1)
     except ImportError:
         print("❌ Cannot import webhook_alert_bot.py")
         print("   Ensure webhook_alert_bot.py is in the project directory")
